@@ -2,7 +2,8 @@
 
 @inject PrestamosService prestamosService
 @inject DeudoresService deudoresService
-@inject ToastService toastService
+@inject CuotasService cuotasService
+@* @inject ToastService toastService *@
 @inject NavigationManager navigationManager
 
 @*HTML*@
@@ -21,12 +22,12 @@
                 @*Deudor*@
                 <div class="mb-3">
                     <label class="form-label"><strong>Deudor</strong></label>
-                        <InputSelect class="form-control" @bind-Value="Prestamo.DeudorId">
-                            <option value="" selected disabled>Elija una opci&oacute;n</option>
-                            @foreach (var deudor in ListaDeudores)
-                            {
-                                <option value="@deudor.DeudorId">@deudor.Nombres</option>
-                            }
+                    <InputSelect class="form-control" @bind-Value="Prestamo.DeudorId">
+                        <option value="" selected disabled>Elija una opci&oacute;n</option>
+                        @foreach (var deudor in ListaDeudores)
+                        {
+                            <option value="@deudor.DeudorId">@deudor.Nombres</option>
+                        }
                     </InputSelect>
                     <ValidationMessage For="(() => Prestamo.Deudor)" />
                 </div>
@@ -36,20 +37,50 @@
                     <InputText class="form-control" @bind-Value="Prestamo.Concepto"></InputText>
                     <ValidationMessage For="(() => Prestamo.Concepto)" />
                 </div>
+               
                 @*Monto*@
                 <div class="mb-3">
                     <label class="form-label"><strong>Monto</strong></label>
                     <InputNumber class="form-control" @bind-Value="Prestamo.Monto"></InputNumber>
                     <ValidationMessage For="(() => Prestamo.Monto)" />
                 </div>
+
+                @* Detalles de las cuotas *@
+                <div class="border border-success p-3 mt-3">
+                    <h5>Detalles de cuotas</h5>
+                    <hr />
+                    <table class="table table-light">
+                        <thead class="table table-striped">
+                            <tr class="text-center">
+                                <th>CuotaId</th>
+                                <th>Fecha</th>
+                                <th>Valor</th>
+                                <th>Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-center">
+                            @foreach (var cuota in ListaCuotas)
+                            {
+                                <tr>
+                                    <th>@cuota.CuotaId</th>
+                                    <th>@cuota.Fecha</th>
+                                    <th>@cuota.Valor</th>
+                                    <th>@cuota.Balance</th>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <hr />
+                </div>
+
             </div>
 
             @*footer*@
             <div class="card-footer text-center mt-2">
-                <a href="/Prestamo/Index" class="btn btn-secondary"> 
+                <a href="/Prestamo/Index" class="btn btn-secondary">
                     <span class="bi bi-arrow-left"></span> Volver
                 </a>
-                <button type="submit" class="btn btn-primary bi bi-floppy" @onclick="Modificar"> Modificar</button>
+                <button type="button" class="btn btn-primary bi bi-floppy" @onclick="Modificar"> Modificar</button>
                 <button type="button" class="btn btn-danger bi bi-trash" @onclick="Eliminar"> Eliminar</button>
             </div>
         </div>
@@ -63,11 +94,13 @@
     public Prestamos Prestamo { get; set; } = new Prestamos();
     public string Mensaje { get; set; } = string.Empty;
     public List<Deudores> ListaDeudores { get; set; } = new List<Deudores>();
+    public List<Cuotas> ListaCuotas { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
         Prestamo = await prestamosService.Buscar(PrestamoId);
         ListaDeudores = await deudoresService.Listar(d => d.DeudorId > 0);
+        // ListaCuotas = await cuotasService.Listar(c => c == PrestamoId);
 
     }
 
@@ -77,25 +110,26 @@
 
         if (creado)
         {
-            toastService.ShowSuccess( "Se ha modificado correctamente");
+            // toastService.ShowSuccess("Se ha modificado correctamente");
         }
         else
         {
-            toastService.ShowError("No se ha podido modificar correctamente");
+            // toastService.ShowError("No se ha podido modificar correctamente");
         }
     }
 
-    private async Task Eliminar(){
+    private async Task Eliminar()
+    {
         var eliminado = await prestamosService.Eliminar(Prestamo.PrestamoId);
 
         if (eliminado)
         {
-            toastService.ShowSuccess("Se ha eliminado correctamente");
+            // toastService.ShowSuccess("Se ha eliminado correctamente");
             navigationManager.NavigateTo("/Prestamo/Index");
         }
         else
         {
-            toastService.ShowError("No se ha podido eliminar correctamente");
+            // toastService.ShowError("No se ha podido eliminar correctamente");
         }
     }
 }
