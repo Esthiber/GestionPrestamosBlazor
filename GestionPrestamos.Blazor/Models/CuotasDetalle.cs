@@ -10,6 +10,8 @@ namespace GestionPrestamos.Models
 
         public int PrestamoId { get; set; }
 
+        public int DeudorId { get; set; }
+
         public int CuotasNo { get; set; }
 
         [InverseProperty("CuotasDetalle")]
@@ -17,6 +19,9 @@ namespace GestionPrestamos.Models
 
         [ForeignKey("PrestamoId")]
         public Prestamos Prestamo { get; set; } = null!;
+
+        [ForeignKey("DeudorId")]
+        public Deudores Deudor { get; set; } = null!;
 
     }
 }

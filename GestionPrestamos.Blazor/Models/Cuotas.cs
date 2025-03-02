@@ -8,15 +8,17 @@ namespace GestionPrestamos.Models
         [Key]
         public int CuotaId { get; set; }
 
-        public int PrestamoId { get; set; }
+        public int DetalleId { get; set; }
 
         public DateTime Fecha { get; set; } = DateTime.Now;
 
         [Required(ErrorMessage = "El Valor es Requerido.")]
         public double Valor { get; set; }
 
-        [ForeignKey("PrestamoId")]
-        [InverseProperty("Cuota")]
-        public virtual Prestamos Prestamo { get; set; } = null!;
+        public double Balance { get; set; } = 0;
+
+        [ForeignKey("CuotasDetalleId")]
+        [InverseProperty("Cuotas")]
+        public virtual CuotasDetalle CuotasDetalle { get; set; } = null!;
     }
 }
