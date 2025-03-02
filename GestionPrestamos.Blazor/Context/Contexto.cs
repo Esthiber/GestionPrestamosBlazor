@@ -17,6 +17,8 @@ public class Contexto : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+
+
         modelBuilder.Entity<Deudores>().HasData(
             new List<Deudores>()
             {
