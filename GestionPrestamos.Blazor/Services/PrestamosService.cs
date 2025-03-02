@@ -14,8 +14,9 @@ public class PrestamosService(IDbContextFactory<Contexto> DbFactory)
             .AnyAsync(p => p.PrestamoId == prestamoId);
     }
 
-    private async Task<bool> Insertar(Prestamos prestamo)
+    public async Task<bool> Insertar(Prestamos prestamo)
     {
+        prestamo.Balance = prestamo.Monto;
         await using var contexto = await DbFactory.CreateDbContextAsync();
         contexto.Prestamos.Add(prestamo);
         return await contexto.SaveChangesAsync() > 0;
@@ -31,7 +32,6 @@ public class PrestamosService(IDbContextFactory<Contexto> DbFactory)
 
     public async Task<bool> Guardar(Prestamos prestamo)
     {
-        prestamo.Balance = prestamo.Monto;
         if (!await Existe(prestamo.PrestamoId))
         {
             return await Insertar(prestamo);
@@ -45,7 +45,9 @@ public class PrestamosService(IDbContextFactory<Contexto> DbFactory)
     public async Task<Prestamos> Buscar(int prestamoId)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.Prestamos.Include(d => d.Deudor)
+        return await contexto.Prestamos
+            .Include(d => d.Deudor)
+            .Include(c => c.CuotasDetalle)
             .FirstOrDefaultAsync(p => p.PrestamoId == prestamoId);
     }
 
@@ -62,6 +64,7 @@ public class PrestamosService(IDbContextFactory<Contexto> DbFactory)
         await using var contexto = await DbFactory.CreateDbContextAsync();
         return await contexto.Prestamos
             .Include(d => d.Deudor)
+            .Include(c => c.CuotasDetalle)
             .Where(criterio)
             .AsNoTracking()
             .ToListAsync();
@@ -81,6 +84,7 @@ public class PrestamosService(IDbContextFactory<Contexto> DbFactory)
         await using var contexto = await DbFactory.CreateDbContextAsync();
         return await contexto.Prestamos.
             Include(p => p.Deudor)
+            .Include(d => d.CuotasDetalle)
             .FirstOrDefaultAsync(p => p.DeudorId == id);
     }
 }

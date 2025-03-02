@@ -21,11 +21,28 @@ namespace GestionPrestamos.Services
             return await context.SaveChangesAsync() > 0;
         }
 
+        public async Task<bool> InsertarPrestamoDetalle(CuotasDetalle cd)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            context.CuotasDetalle.Add(cd);
+            return await context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> InsertarLista(List<Cuotas> listaCuotas)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            foreach (var c in listaCuotas)
+            {
+                context.Cuotas.Add(c);
+            }
+            return await context.SaveChangesAsync() > 0;
+        }
+
         public async Task<List<Cuotas>> Listar(Expression<Func<Cuotas, bool>> criterio)
         {
             await using var context = await DbFactory.CreateDbContextAsync();
             return await context.Cuotas
-                .Include(c => c.Prestamo)
+                .Include(c => c.CuotasDetalle)
                 .Where(criterio)
                 .ToListAsync();
         }
