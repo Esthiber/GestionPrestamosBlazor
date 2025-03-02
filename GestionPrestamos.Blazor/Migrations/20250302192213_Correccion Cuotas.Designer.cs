@@ -4,6 +4,7 @@ using GestionPrestamos.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GestionPrestamos.Migrations
 {
     [DbContext(typeof(Contexto))]
-    partial class ContextoModelSnapshot : ModelSnapshot
+    [Migration("20250302192213_Correccion Cuotas")]
+    partial class CorreccionCuotas
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -44,22 +47,6 @@ namespace GestionPrestamos.Migrations
                     b.HasIndex("DeudorId");
 
                     b.ToTable("Cobros");
-
-                    b.HasData(
-                        new
-                        {
-                            CobroId = 1,
-                            DeudorId = 1,
-                            Fecha = new DateTime(2025, 3, 2, 16, 2, 52, 792, DateTimeKind.Local).AddTicks(652),
-                            Monto = 500.0
-                        },
-                        new
-                        {
-                            CobroId = 2,
-                            DeudorId = 2,
-                            Fecha = new DateTime(2025, 3, 2, 16, 2, 52, 793, DateTimeKind.Local).AddTicks(6920),
-                            Monto = 300.0
-                        });
                 });
 
             modelBuilder.Entity("GestionPrestamos.Models.CobrosDetalle", b =>
@@ -84,22 +71,6 @@ namespace GestionPrestamos.Migrations
                     b.HasIndex("CobroId");
 
                     b.ToTable("CobrosDetalle");
-
-                    b.HasData(
-                        new
-                        {
-                            DetalleId = 1,
-                            CobroId = 1,
-                            PrestamoId = 1,
-                            ValorCobrado = 500.0
-                        },
-                        new
-                        {
-                            DetalleId = 2,
-                            CobroId = 2,
-                            PrestamoId = 2,
-                            ValorCobrado = 300.0
-                        });
                 });
 
             modelBuilder.Entity("GestionPrestamos.Models.Cuotas", b =>
@@ -127,24 +98,6 @@ namespace GestionPrestamos.Migrations
                     b.HasIndex("CuotasDetalleId");
 
                     b.ToTable("Cuotas");
-
-                    b.HasData(
-                        new
-                        {
-                            CuotaId = 1,
-                            Balance = 0.0,
-                            CuotasDetalleId = 1,
-                            Fecha = new DateTime(2025, 3, 2, 16, 2, 52, 794, DateTimeKind.Local).AddTicks(828),
-                            Valor = 500.0
-                        },
-                        new
-                        {
-                            CuotaId = 2,
-                            Balance = 0.0,
-                            CuotasDetalleId = 2,
-                            Fecha = new DateTime(2025, 3, 2, 16, 2, 52, 794, DateTimeKind.Local).AddTicks(1540),
-                            Valor = 300.0
-                        });
                 });
 
             modelBuilder.Entity("GestionPrestamos.Models.CuotasDetalle", b =>
@@ -158,28 +111,19 @@ namespace GestionPrestamos.Migrations
                     b.Property<int>("CuotasNo")
                         .HasColumnType("int");
 
+                    b.Property<int>("DeudorId")
+                        .HasColumnType("int");
+
                     b.Property<int>("PrestamoId")
                         .HasColumnType("int");
 
                     b.HasKey("CuotasDetalleId");
 
+                    b.HasIndex("DeudorId");
+
                     b.HasIndex("PrestamoId");
 
                     b.ToTable("CuotasDetalle");
-
-                    b.HasData(
-                        new
-                        {
-                            CuotasDetalleId = 1,
-                            CuotasNo = 12,
-                            PrestamoId = 1
-                        },
-                        new
-                        {
-                            CuotasDetalleId = 2,
-                            CuotasNo = 6,
-                            PrestamoId = 2
-                        });
                 });
 
             modelBuilder.Entity("GestionPrestamos.Models.Deudores", b =>
@@ -208,21 +152,6 @@ namespace GestionPrestamos.Migrations
                         {
                             DeudorId = 2,
                             Nombres = "Maria Perez"
-                        },
-                        new
-                        {
-                            DeudorId = 3,
-                            Nombres = "Carlos Sanchez"
-                        },
-                        new
-                        {
-                            DeudorId = 4,
-                            Nombres = "Ana Torres"
-                        },
-                        new
-                        {
-                            DeudorId = 5,
-                            Nombres = "Luis Ramirez"
                         });
                 });
 
@@ -252,32 +181,6 @@ namespace GestionPrestamos.Migrations
                     b.HasIndex("DeudorId");
 
                     b.ToTable("Prestamos");
-
-                    b.HasData(
-                        new
-                        {
-                            PrestamoId = 1,
-                            Balance = 15000.0,
-                            Concepto = "Compra de vehículo",
-                            DeudorId = 1,
-                            Monto = 15000.0
-                        },
-                        new
-                        {
-                            PrestamoId = 2,
-                            Balance = 5000.0,
-                            Concepto = "Estudio",
-                            DeudorId = 2,
-                            Monto = 5000.0
-                        },
-                        new
-                        {
-                            PrestamoId = 3,
-                            Balance = 8000.0,
-                            Concepto = "Mejoras en casa",
-                            DeudorId = 3,
-                            Monto = 8000.0
-                        });
                 });
 
             modelBuilder.Entity("GestionPrestamos.Models.Cobros", b =>
@@ -315,11 +218,19 @@ namespace GestionPrestamos.Migrations
 
             modelBuilder.Entity("GestionPrestamos.Models.CuotasDetalle", b =>
                 {
+                    b.HasOne("GestionPrestamos.Models.Deudores", "Deudor")
+                        .WithMany()
+                        .HasForeignKey("DeudorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("GestionPrestamos.Models.Prestamos", "Prestamo")
                         .WithMany("CuotasDetalle")
                         .HasForeignKey("PrestamoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Deudor");
 
                     b.Navigation("Prestamo");
                 });
