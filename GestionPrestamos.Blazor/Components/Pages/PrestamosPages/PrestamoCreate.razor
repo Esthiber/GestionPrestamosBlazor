@@ -2,6 +2,7 @@
 
 @inject PrestamosService prestamosService
 @inject DeudoresService deudoresService
+@inject CuotasService cuotasService
 @inject NavigationManager navigationManager
 @inject ToastService toastService
 
@@ -9,7 +10,7 @@
 <PageTitle>Create</PageTitle>
 <EditForm Model="Prestamo" OnValidSubmit="Guardar">
     <DataAnnotationsValidator />
-    
+
 
     <div class="container">
         <div class="card shadow-lg">
@@ -18,7 +19,7 @@
             </div>
 
             <div class="card-body ">
-    
+
                 @*Deudor*@
                 <div class="mb-3">
                     <label class="form-label"><strong>Deudor</strong></label>
@@ -43,8 +44,50 @@
                     <InputNumber class="form-control" @bind-Value="Prestamo.Monto"></InputNumber>
                     <ValidationMessage For="(() => Prestamo.Monto)" />
                 </div>
-            </div>
 
+                @*Cuotas*@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Cuotas</strong></label>
+                    <InputNumber class="form-control" @bind-Value="Cuotas" min="1" max="100"></InputNumber>
+                    @if (Prestamo.Monto >= 1)
+                    {
+                        <div class="btn btn-primary" @onclick="CrearCuotas">
+                            <span class=" bi bi-plus-square mt-3"></span>Crear Cuotas
+                        </div>
+                    }
+                </div>
+
+                @* Detalles de las cuotas *@
+                <div class="border border-success p-3 mt-3">
+                    <h5>Detalles de cuotas</h5>
+                    <hr />
+                    <table class="table table-light">
+                        <thead class="table table-striped">
+                            <tr class="text-center">
+                                <th>CuotaId</th>
+                                <th>Fecha</th>
+                                <th>Valor</th>
+                                <th>Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-center">
+                            @foreach (var cuota in ListaCuotas)
+                            {
+                                <tr>
+                                    <th>@cuota.CuotaId</th>
+                                    <th>@cuota.Fecha</th>
+                                    <th>@cuota.Valor.ToString("n2")</th>
+                                    <th>@cuota.Balance.ToString("n2")</th>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <hr />
+                </div>
+
+
+            </div>
+            @Mensaje
             @*footer*@
             <div class="card-footer text-center mt-2">
                 <a href="/Prestamo/Index" class="btn btn-secondary"> <span class="bi bi-arrow-left"></span> Volver</a>
@@ -53,30 +96,84 @@
         </div>
     </div>
 </EditForm>
-@Mensaje
+
 
 @code {
     public Prestamos Prestamo { get; set; } = new Prestamos();
     public string Mensaje { get; set; } = string.Empty;
     public List<Deudores> ListaDeudores { get; set; } = new List<Deudores>();
+    public int Cuotas { get; set; } = 1;
+    public List<Cuotas> ListaCuotas { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
         ListaDeudores = await deudoresService.Listar(d => d.DeudorId > 0);
+
+    }
+
+    public async Task CrearCuotas()
+    {
+        if (Cuotas <= 0 && Prestamo.Monto <= 0) return;
+
+        ListaCuotas.Clear();
+        double Value = Prestamo.Monto / Cuotas;
+
+        for (int i = 0; i < Cuotas; i++)
+        {
+            Cuotas cuotas = new();
+            cuotas.CuotaId = i + 1;
+            cuotas.PrestamoId = Prestamo.PrestamoId;
+            cuotas.Valor = Value;
+            cuotas.Balance = 0;
+            ListaCuotas.Add(cuotas);
+        }
     }
 
     public async Task Guardar()
     {
-        var creado = await prestamosService.Guardar(Prestamo);
 
-        if (creado)
+        var creado = await prestamosService.Insertar(Prestamo);
+
+        Console.WriteLine($"Creado {creado}");
+
+        List<Prestamos> pres = await prestamosService.GetList(p => p.DeudorId == Prestamo.DeudorId);
+
+
+        foreach (var p in pres)
         {
-            toastService.ShowSuccess("Cobro Guardado Correctamente");
-            navigationManager.NavigateTo("/Prestamo/Index");
+            Console.WriteLine($"{p.PrestamoId} | {p.Concepto} | {p.Monto.ToString("n2")}");
+        }
+
+
+        Console.WriteLine($"Encontrado? {pres != null}");
+
+
+        if (pres == null) ListaCuotas.Clear();
+        else
+        {
+            for (int i = 0; i < ListaCuotas.Count; i++)
+            {
+                ListaCuotas[i].CuotaId = default;
+                ListaCuotas[i].PrestamoId = pres.LastOrDefault().PrestamoId;
+            }
+        }
+
+        CuotasDetalle cuotasDetalle = new() { PrestamoId = Prestamo.PrestamoId, CuotasNo = Cuotas };
+
+        var crearCuotasDetalle = await cuotasService.InsertarPrestamoDetalle(cuotasDetalle);
+        var crearCuotas = await cuotasService.InsertarLista(ListaCuotas);
+
+        if (creado && crearCuotas && crearCuotasDetalle)
+        {
+            Mensaje = "se guardo";
+
+            // toastService.ShowSuccess("Cobro Guardado Correctamente");
+            // navigationManager.NavigateTo("/Prestamo/Index");
         }
         else
         {
-            toastService.ShowError("No se pudo guardar correctamente");
+            Mensaje = "No se pudo guardar correctamente";
+            // toastService.ShowError("No se pudo guardar correctamente");
         }
     }
 }
