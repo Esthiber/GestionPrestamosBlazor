@@ -44,14 +44,14 @@ namespace GestionPrestamos.Services
             context.CuotasDetalle.Add(new() { PrestamoId = PrestamoId, CuotasNo = CuotasNo });
             await context.SaveChangesAsync();
 
-            var cuotaDetalle = GetCuotasDetallesAsync(PrestamoId);
+            var cuotaDetalle = await GetCuotasDetallesAsync(PrestamoId);
 
             for (int i = 0; i < CuotasNo; i++)
             {
                 context.Cuotas.Add(new()
                 {
                     CuotaNo = i + 1,
-                    CuotasDetalleId = cuotaDetalle.Result.CuotasDetalleId,
+                    CuotasDetalleId = cuotaDetalle.CuotasDetalleId,
                     Valor = CuotasValor
                 });
             }
