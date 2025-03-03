@@ -32,6 +32,7 @@ public class PrestamosService(IDbContextFactory<Contexto> DbFactory)
 
     public async Task<bool> Guardar(Prestamos prestamo)
     {
+        prestamo.Balance = prestamo.Monto;
         if (!await Existe(prestamo.PrestamoId))
         {
             return await Insertar(prestamo);
