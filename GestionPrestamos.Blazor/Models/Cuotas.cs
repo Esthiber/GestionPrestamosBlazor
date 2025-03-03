@@ -8,6 +8,8 @@ namespace GestionPrestamos.Models
         [Key]
         public int CuotaId { get; set; }
 
+        public int CuotaNo { get; set; }
+
         public int CuotasDetalleId { get; set; }
 
         public DateTime Fecha { get; set; } = DateTime.Now;
