@@ -84,6 +84,13 @@ namespace GestionPrestamos.Services
                 .SingleOrDefaultAsync(c => c.PrestamoId == prestamoId);
         }
 
+        public async Task<bool> ModificarCuotasDetallesAsync(CuotasDetalle cuotasDetalle)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            context.CuotasDetalle.Update(cuotasDetalle);
+            return await context.SaveChangesAsync() > 0;
+        }
+
         public async Task<bool> EliminarListaCuotasAsync(int CuotasDetalleId)
         {
             await using var contexto = await DbFactory.CreateDbContextAsync();
@@ -98,6 +105,13 @@ namespace GestionPrestamos.Services
             return await contexto.CuotasDetalle
                 .Where(c => c.CuotasDetalleId == CuotasDetalleId)
                 .ExecuteDeleteAsync() > 0;
+        }
+
+        public async Task<bool> EliminarDetalleDeCuotas(int CuotasDetalleId)
+        {
+            var cuotas = await EliminarListaCuotasAsync(CuotasDetalleId);
+            var detalle = await EliminarCuotasDetalleAsync(CuotasDetalleId);
+            return cuotas && detalle;
         }
     }
 }
