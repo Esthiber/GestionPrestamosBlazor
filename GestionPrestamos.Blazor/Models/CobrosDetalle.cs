@@ -24,4 +24,7 @@ public partial class CobrosDetalle
     [ForeignKey("CobroId")]
     [InverseProperty("CobrosDetalle")]
     public virtual Cobros Cobro { get; set; } = null!;
+
+    [ForeignKey("PrestamoId")]
+    public virtual Prestamos Prestamo { get; set; } = null!;
 }

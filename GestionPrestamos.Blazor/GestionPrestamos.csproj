@@ -16,4 +16,9 @@
 		</PackageReference>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Components\Pages\CuotasPage\" />
+	  <Folder Include="Migrations\" />
+	</ItemGroup>
+
 </Project>
