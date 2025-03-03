@@ -4,7 +4,6 @@
 @inject DeudoresService deudoresService
 @inject CuotasService cuotasService
 @inject NavigationManager navigationManager
-@inject ToastService toastService
 
 @*HTML*@
 <PageTitle>Create</PageTitle>
@@ -64,6 +63,7 @@
                     <table class="table table-light">
                         <thead class="table table-striped">
                             <tr class="text-center">
+                                <th>CuotaNo</th>
                                 <th>Fecha</th>
                                 <th>Valor</th>
                                 <th>Balance</th>
@@ -73,6 +73,7 @@
                             @foreach (var cuota in ListaCuotas)
                             {
                                 <tr>
+                                    <th>@cuota.CuotaNo</th>
                                     <th>@cuota.Fecha</th>
                                     <th>@cuota.Valor.ToString("n2")</th>
                                     <th>@cuota.Balance.ToString("n2")</th>
@@ -126,10 +127,9 @@
         {
             Cuotas cuota = new()
                 {
-                    CuotasDetalleId = CuotasDetalle.CuotasDetalleId
-                                                    ,
-                    Valor = valor
-                                                    ,
+                    CuotaNo = i + 1,
+                    CuotasDetalleId = CuotasDetalle.CuotasDetalleId,
+                    Valor = valor,
                     Fecha = Fecha.AddMonths(i)
                 };
 
@@ -155,7 +155,7 @@
         }
         else
         {
-            // toastService.ShowError("No se pudo guardar correctamente");
+            // Implementar alerta que funcione.
         }
     }
 }
