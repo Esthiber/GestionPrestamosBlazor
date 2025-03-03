@@ -3,7 +3,6 @@
 @inject PrestamosService prestamosService
 @inject DeudoresService deudoresService
 @inject CuotasService cuotasService
-@* @inject ToastService toastService *@
 @inject NavigationManager navigationManager
 
 @*HTML*@
@@ -127,12 +126,10 @@
         if (creado && eliminarDetalleCuotas)
         {
             await cuotasService.CrearDetalleCuotas(PrestamoId, CuotasDetalle.CuotasNo, Prestamo.Monto / CuotasDetalle.CuotasNo);
-            // toastService.ShowSuccess("Se ha eliminado correctamente");
             navigationManager.NavigateTo("/Prestamo/Index");
         }
         else
         {
-            // toastService.ShowError("No se ha podido eliminar correctamente");
         }
     }
 
@@ -144,12 +141,10 @@
 
         if (eliminado && eliminarDetalleCuotas)
         {
-            // toastService.ShowSuccess("Se ha eliminado correctamente");
             navigationManager.NavigateTo("/Prestamo/Index");
         }
         else
         {
-            // toastService.ShowError("No se ha podido eliminar correctamente");
         }
     }
 

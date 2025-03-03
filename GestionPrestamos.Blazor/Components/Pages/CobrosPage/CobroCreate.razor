@@ -4,7 +4,7 @@
 @inject DeudoresService deudoresService
 @inject PrestamosService prestamosService
 @inject NavigationManager navigationManager
-@inject ToastService toastService
+@inject CuotasService cuotasService
 
 <PageTitle>Crear Cobros</PageTitle>
 <EditForm Model="Cobro" OnValidSubmit="Guardar">
@@ -43,7 +43,7 @@
                             }
                         </InputSelect>
                         <button type="button" class="btn btn-outline-success bi bi-arrow-clockwise"
-                                @onclick="BuscarPrestamosPendientes">
+                        @onclick="BuscarPrestamosPendientes">
                             Buscar
                         </button>
 
@@ -57,9 +57,9 @@
                     <h5>Detalles del Cobro</h5>
 
                     <PrestamoPicker Prestamos="ListaPrestamos"
-                                    PrestamoId="DetalleSeleccionado.PrestamoId"
-                                    Valor="DetalleSeleccionado.ValorCobrado"
-                                    OnPrestamoSelected="HandlePrestamoSelected" />
+                    PrestamoId="DetalleSeleccionado.PrestamoId"
+                    Valor="DetalleSeleccionado.ValorCobrado"
+                    OnPrestamoSelected="HandlePrestamoSelected" />
                     <hr />
                     <table class="table table-light">
                         <thead class="table table-striped">
@@ -77,7 +77,7 @@
                                     <td>@detalle.ValorCobrado</td>
                                     <td>
                                         <button type="button" class="btn btn-outline-danger bi bi-trash"
-                                                @onclick="() => RemoverDetalle(detalle)"></button>
+                                        @onclick="() => RemoverDetalle(detalle)"></button>
                                     </td>
                                 </tr>
                             }
@@ -146,15 +146,14 @@
     public async Task Guardar()
     {
         var paso = await cobroService.Guardar(Cobro);
+        var paso2 = await cuotasService.AfectarCuotas(Cobro.CobrosDetalle.ToList());
 
         if (paso)
         {
-            toastService.ShowSuccess("Cobro Guardado Correctamente");
             navigationManager.NavigateTo("/Cobro/Index");
         }
         else
         {
-            toastService.ShowError("No se pudo guardar correctamente");
         }
     }
 
