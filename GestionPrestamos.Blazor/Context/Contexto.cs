@@ -52,13 +52,13 @@ public class Contexto : DbContext
             .HasMany(c => c.CobrosDetalle)
             .WithOne(cd => cd.Cobro)
             .HasForeignKey(cd => cd.CobroId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<CuotasDetalle>()
             .HasMany(cd => cd.Cuotas)
             .WithOne(c => c.CuotasDetalle)
             .HasForeignKey(c => c.CuotasDetalleId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Configuración de Prestamos
         modelBuilder.Entity<Prestamos>().HasData(
@@ -74,8 +74,8 @@ public class Contexto : DbContext
         modelBuilder.Entity<Cobros>().HasData(
             new List<Cobros>()
             {
-            new() { CobroId = 1, Fecha = DateTime.Now, DeudorId = 1, Monto = 500 },
-            new() { CobroId = 2, Fecha = DateTime.Now, DeudorId = 2, Monto = 300 }
+            new() { CobroId = 1, Fecha = new DateTime(2025,3,2), DeudorId = 1, Monto = 500 },
+            new() { CobroId = 2, Fecha = new DateTime(2025,3,2), DeudorId = 2, Monto = 300 }
             }
         );
 
@@ -92,8 +92,8 @@ public class Contexto : DbContext
         modelBuilder.Entity<Cuotas>().HasData(
             new List<Cuotas>()
             {
-            new() { CuotaId = 1, CuotasDetalleId = 1, Fecha = DateTime.Now, Valor = 500, Balance = 0 },
-            new() { CuotaId = 2, CuotasDetalleId = 2, Fecha = DateTime.Now, Valor = 300, Balance = 0 }
+            new() { CuotaId = 1, CuotasDetalleId = 1, Fecha = new DateTime(2025, 3, 2), Valor = 500, Balance = 0 },
+            new() { CuotaId = 2, CuotasDetalleId = 2, Fecha = new DateTime(2025, 3, 2), Valor = 300, Balance = 0 }
             }
         );
 
@@ -108,4 +108,5 @@ public class Contexto : DbContext
 
         base.OnModelCreating(modelBuilder);
     }
+
 }
