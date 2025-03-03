@@ -29,5 +29,5 @@ public partial class Prestamos
     public virtual Deudores Deudor { get; set; } = null!;
 
     [InverseProperty("Prestamo")]
-    public virtual ICollection<CuotasDetalle> CuotasDetalle { get; set; } = null!;
+    public virtual CuotasDetalle CuotasDetalle { get; set; } = null!;
 }
