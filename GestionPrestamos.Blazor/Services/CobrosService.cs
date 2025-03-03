@@ -10,7 +10,7 @@ public class CobrosService(IDbContextFactory<Contexto> DbFactory)
 {
     private async Task<bool> Existe(int cobroId)
     {
-        await using var contexto= await DbFactory.CreateDbContextAsync();
+        await using var contexto = await DbFactory.CreateDbContextAsync();
         return await contexto.Cobros.AnyAsync(c => c.CobroId == cobroId);
     }
 
@@ -22,7 +22,7 @@ public class CobrosService(IDbContextFactory<Contexto> DbFactory)
         return await contexto.SaveChangesAsync() > 0;
     }
 
-    private async Task AfectarPrestamos(CobrosDetalle[] detalle, TipoOperacion tipoOperacion)
+    private async Task<bool> AfectarPrestamos(CobrosDetalle[] detalle, TipoOperacion tipoOperacion)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
         foreach (var item in detalle)
@@ -33,7 +33,10 @@ public class CobrosService(IDbContextFactory<Contexto> DbFactory)
             else
                 prestamo.Balance += item.ValorCobrado;
 
+            contexto.Prestamos.Update(prestamo);
+
         }
+        return await contexto.SaveChangesAsync() > 0;
     }
 
     private async Task<bool> Modificar(Cobros cobro)
