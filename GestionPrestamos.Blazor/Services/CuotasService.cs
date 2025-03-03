@@ -7,28 +7,28 @@ namespace GestionPrestamos.Services
 {
     public class CuotasService(IDbContextFactory<Contexto> DbFactory)
     {
-        public async Task<bool> Existe(int id)
+        public async Task<bool> ExisteCuotaAsync(int id)
         {
             await using var context = await DbFactory.CreateDbContextAsync();
             return await context.Cuotas
                 .AnyAsync(c => c.CuotaId == id);
         }
 
-        public async Task<bool> Insertar(Cuotas cuota)
+        public async Task<bool> InsertarCuotaAsync(Cuotas cuota)
         {
             await using var context = await DbFactory.CreateDbContextAsync();
             context.Cuotas.Add(cuota);
             return await context.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> InsertarPrestamoDetalle(CuotasDetalle cd)
+        public async Task<bool> InsertarCuotasDetalleAsync(CuotasDetalle cd)
         {
             await using var context = await DbFactory.CreateDbContextAsync();
             context.CuotasDetalle.Add(cd);
             return await context.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> InsertarLista(List<Cuotas> listaCuotas)
+        public async Task<bool> InsertarListaCuotasAsync(List<Cuotas> listaCuotas)
         {
             await using var context = await DbFactory.CreateDbContextAsync();
             foreach (var c in listaCuotas)
@@ -38,7 +38,37 @@ namespace GestionPrestamos.Services
             return await context.SaveChangesAsync() > 0;
         }
 
-        public async Task<List<Cuotas>> Listar(Expression<Func<Cuotas, bool>> criterio)
+        public async Task<bool> CrearDetalleCuotas(int PrestamoId, int CuotasNo, double CuotasValor)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            context.CuotasDetalle.Add(new() { PrestamoId = PrestamoId, CuotasNo = CuotasNo });
+            await context.SaveChangesAsync();
+
+            var cuotaDetalle = GetCuotasDetallesAsync(PrestamoId);
+
+            for (int i = 0; i < CuotasNo; i++)
+            {
+                context.Cuotas.Add(new()
+                {
+                    CuotaNo = i + 1,
+                    CuotasDetalleId = cuotaDetalle.Result.CuotasDetalleId,
+                    Valor = CuotasValor
+                });
+            }
+
+            return await context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<List<Cuotas>> ListarCuotasAsync(int CuotasDetalleId)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            return await context.Cuotas
+                .Include(c => c.CuotasDetalle)
+                .Where(c => c.CuotasDetalleId == CuotasDetalleId)
+                .ToListAsync();
+        }
+
+        public async Task<List<Cuotas>> ListarCuotasAsync(Expression<Func<Cuotas, bool>> criterio)
         {
             await using var context = await DbFactory.CreateDbContextAsync();
             return await context.Cuotas
@@ -54,5 +84,20 @@ namespace GestionPrestamos.Services
                 .SingleOrDefaultAsync(c => c.PrestamoId == prestamoId);
         }
 
+        public async Task<bool> EliminarListaCuotasAsync(int CuotasDetalleId)
+        {
+            await using var contexto = await DbFactory.CreateDbContextAsync();
+            return await contexto.Cuotas
+                .Where(c => c.CuotasDetalleId == CuotasDetalleId)
+                .ExecuteDeleteAsync() > 0;
+        }
+
+        public async Task<bool> EliminarCuotasDetalleAsync(int CuotasDetalleId)
+        {
+            await using var contexto = await DbFactory.CreateDbContextAsync();
+            return await contexto.CuotasDetalle
+                .Where(c => c.CuotasDetalleId == CuotasDetalleId)
+                .ExecuteDeleteAsync() > 0;
+        }
     }
 }
