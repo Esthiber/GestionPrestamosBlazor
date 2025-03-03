@@ -64,7 +64,6 @@
                     <table class="table table-light">
                         <thead class="table table-striped">
                             <tr class="text-center">
-                                <th>CuotaId</th>
                                 <th>Fecha</th>
                                 <th>Valor</th>
                                 <th>Balance</th>
@@ -74,7 +73,6 @@
                             @foreach (var cuota in ListaCuotas)
                             {
                                 <tr>
-                                    <th>@cuota.CuotaId</th>
                                     <th>@cuota.Fecha</th>
                                     <th>@cuota.Valor.ToString("n2")</th>
                                     <th>@cuota.Balance.ToString("n2")</th>
@@ -87,7 +85,6 @@
 
 
             </div>
-            @Mensaje
             @*footer*@
             <div class="card-footer text-center mt-2">
                 <a href="/Prestamo/Index" class="btn btn-secondary"> <span class="bi bi-arrow-left"></span> Volver</a>
@@ -100,32 +97,43 @@
 
 @code {
     public Prestamos Prestamo { get; set; } = new Prestamos();
-    public string Mensaje { get; set; } = string.Empty;
     public List<Deudores> ListaDeudores { get; set; } = new List<Deudores>();
+    public List<Prestamos> ListaPrestamos { get; set; } = new();
     public int Cuotas { get; set; } = 1;
     public List<Cuotas> ListaCuotas { get; set; } = new();
+    public CuotasDetalle CuotasDetalle { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
         ListaDeudores = await deudoresService.Listar(d => d.DeudorId > 0);
+        await LoadPrestamos();
 
+    }
+
+    public async Task LoadPrestamos()
+    {
+        ListaPrestamos.Clear();
+        if (Prestamo.DeudorId > 0)
+            ListaPrestamos = await prestamosService.GetList(p => p.DeudorId == Prestamo.DeudorId);
     }
 
     public async Task CrearCuotas()
     {
-        if (Cuotas <= 0 && Prestamo.Monto <= 0) return;
-
         ListaCuotas.Clear();
-        double Value = Prestamo.Monto / Cuotas;
-
+        double valor = Prestamo.Monto / Cuotas;
+        DateTime Fecha = DateTime.Now;
         for (int i = 0; i < Cuotas; i++)
         {
-            Cuotas cuotas = new();
-            cuotas.CuotaId = i + 1;
-            cuotas.PrestamoId = Prestamo.PrestamoId;
-            cuotas.Valor = Value;
-            cuotas.Balance = 0;
-            ListaCuotas.Add(cuotas);
+            Cuotas cuota = new()
+                {
+                    CuotasDetalleId = CuotasDetalle.CuotasDetalleId
+                                                    ,
+                    Valor = valor
+                                                    ,
+                    Fecha = Fecha.AddMonths(i)
+                };
+
+            ListaCuotas.Add(cuota);
         }
     }
 
@@ -134,45 +142,34 @@
 
         var creado = await prestamosService.Insertar(Prestamo);
 
-        Console.WriteLine($"Creado {creado}");
+        double valorCuota = Prestamo.Monto / Cuotas;
 
-        List<Prestamos> pres = await prestamosService.GetList(p => p.DeudorId == Prestamo.DeudorId);
-
-
-        foreach (var p in pres)
+        if (creado)
         {
-            Console.WriteLine($"{p.PrestamoId} | {p.Concepto} | {p.Monto.ToString("n2")}");
-        }
+            await LoadPrestamos();
+            Prestamos pres = ListaPrestamos.Last();
+            var detalleCreado = await cuotasService.InsertarPrestamoDetalle(new CuotasDetalle()
+                {
+                    PrestamoId = pres.PrestamoId,
+                    CuotasNo = Cuotas
+                });
 
-
-        Console.WriteLine($"Encontrado? {pres != null}");
-
-
-        if (pres == null) ListaCuotas.Clear();
-        else
-        {
-            for (int i = 0; i < ListaCuotas.Count; i++)
+            if (detalleCreado)
             {
-                ListaCuotas[i].CuotaId = default;
-                ListaCuotas[i].PrestamoId = pres.LastOrDefault().PrestamoId;
+                CuotasDetalle cuotasDetalles = await cuotasService.GetCuotasDetallesAsync(pres.PrestamoId);
+                for (int i = 0; i < Cuotas; i++)
+                {
+                    await cuotasService.Insertar(new()
+                        {
+                            CuotasDetalleId = cuotasDetalles.CuotasDetalleId,
+                            Valor = valorCuota
+                        });
+                }
             }
-        }
-
-        CuotasDetalle cuotasDetalle = new() { PrestamoId = Prestamo.PrestamoId, CuotasNo = Cuotas };
-
-        var crearCuotasDetalle = await cuotasService.InsertarPrestamoDetalle(cuotasDetalle);
-        var crearCuotas = await cuotasService.InsertarLista(ListaCuotas);
-
-        if (creado && crearCuotas && crearCuotasDetalle)
-        {
-            Mensaje = "se guardo";
-
-            // toastService.ShowSuccess("Cobro Guardado Correctamente");
-            // navigationManager.NavigateTo("/Prestamo/Index");
+            navigationManager.NavigateTo("/Prestamo/Index");
         }
         else
         {
-            Mensaje = "No se pudo guardar correctamente";
             // toastService.ShowError("No se pudo guardar correctamente");
         }
     }
