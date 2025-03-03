@@ -148,24 +148,9 @@
         {
             await LoadPrestamos();
             Prestamos pres = ListaPrestamos.Last();
-            var detalleCreado = await cuotasService.InsertarPrestamoDetalle(new CuotasDetalle()
-                {
-                    PrestamoId = pres.PrestamoId,
-                    CuotasNo = Cuotas
-                });
 
-            if (detalleCreado)
-            {
-                CuotasDetalle cuotasDetalles = await cuotasService.GetCuotasDetallesAsync(pres.PrestamoId);
-                for (int i = 0; i < Cuotas; i++)
-                {
-                    await cuotasService.Insertar(new()
-                        {
-                            CuotasDetalleId = cuotasDetalles.CuotasDetalleId,
-                            Valor = valorCuota
-                        });
-                }
-            }
+            await cuotasService.CrearDetalleCuotas(pres.PrestamoId, Cuotas, valorCuota);
+
             navigationManager.NavigateTo("/Prestamo/Index");
         }
         else
