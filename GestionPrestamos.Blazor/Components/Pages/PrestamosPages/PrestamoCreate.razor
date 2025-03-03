@@ -48,7 +48,7 @@
                 <div class="mb-3">
                     <label class="form-label"><strong>Cuotas</strong></label>
                     <InputNumber class="form-control" @bind-Value="Cuotas" min="1" max="100"></InputNumber>
-                    @if (Prestamo.Monto >= 1)
+                    @if (Prestamo.Monto >= 1 && Cuotas >= 1)
                     {
                         <div class="btn btn-primary" @onclick="CrearCuotas">
                             <span class=" bi bi-plus-square mt-3"></span>Crear Cuotas

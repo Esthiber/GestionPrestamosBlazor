@@ -37,12 +37,25 @@
                     <InputText class="form-control" @bind-Value="Prestamo.Concepto"></InputText>
                     <ValidationMessage For="(() => Prestamo.Concepto)" />
                 </div>
-               
+
                 @*Monto*@
                 <div class="mb-3">
                     <label class="form-label"><strong>Monto</strong></label>
                     <InputNumber class="form-control" @bind-Value="Prestamo.Monto"></InputNumber>
                     <ValidationMessage For="(() => Prestamo.Monto)" />
+                </div>
+
+
+                @*Cuotas*@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Cuotas</strong></label>
+                    <InputNumber class="form-control" @bind-Value="CuotasDetalle.CuotasNo" min="1" max="100"></InputNumber>
+                    @if (Prestamo.Monto >= 1 && CuotasDetalle.CuotasNo >= 1)
+                    {
+                        <div class="btn btn-primary" @onclick="CrearCuotas">
+                            <span class=" bi bi-plus-square mt-3"></span>Crear Cuotas
+                        </div>
+                    }
                 </div>
 
                 @* Detalles de las cuotas *@
@@ -52,7 +65,7 @@
                     <table class="table table-light">
                         <thead class="table table-striped">
                             <tr class="text-center">
-                                <th>CuotaId</th>
+                                <th>CuotaNo</th>
                                 <th>Fecha</th>
                                 <th>Valor</th>
                                 <th>Balance</th>
@@ -62,10 +75,10 @@
                             @foreach (var cuota in ListaCuotas)
                             {
                                 <tr>
-                                    <th>@cuota.CuotaId</th>
+                                    <th>@cuota.CuotaNo</th>
                                     <th>@cuota.Fecha</th>
-                                    <th>@cuota.Valor</th>
-                                    <th>@cuota.Balance</th>
+                                    <th>@cuota.Valor.ToString("n2")</th>
+                                    <th>@cuota.Balance.ToString("n2")</th>
                                 </tr>
                             }
                         </tbody>
@@ -95,34 +108,41 @@
     public string Mensaje { get; set; } = string.Empty;
     public List<Deudores> ListaDeudores { get; set; } = new List<Deudores>();
     public List<Cuotas> ListaCuotas { get; set; } = new();
+    public CuotasDetalle CuotasDetalle { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
         Prestamo = await prestamosService.Buscar(PrestamoId);
         ListaDeudores = await deudoresService.Listar(d => d.DeudorId > 0);
-        // ListaCuotas = await cuotasService.Listar(c => c == PrestamoId);
-
+        CuotasDetalle = await cuotasService.GetCuotasDetallesAsync(PrestamoId);
+        ListaCuotas = await cuotasService.ListarCuotasAsync(c => c.CuotasDetalleId == CuotasDetalle.CuotasDetalleId);
     }
 
     public async Task Modificar()
     {
         var creado = await prestamosService.Guardar(Prestamo);
 
-        if (creado)
+        var eliminarDetalleCuotas = await cuotasService.EliminarDetalleDeCuotas(CuotasDetalle.CuotasDetalleId);
+
+        if (creado && eliminarDetalleCuotas)
         {
-            // toastService.ShowSuccess("Se ha modificado correctamente");
+            await cuotasService.CrearDetalleCuotas(PrestamoId, CuotasDetalle.CuotasNo, Prestamo.Monto / CuotasDetalle.CuotasNo);
+            // toastService.ShowSuccess("Se ha eliminado correctamente");
+            navigationManager.NavigateTo("/Prestamo/Index");
         }
         else
         {
-            // toastService.ShowError("No se ha podido modificar correctamente");
+            // toastService.ShowError("No se ha podido eliminar correctamente");
         }
     }
 
     private async Task Eliminar()
     {
+        var eliminarDetalleCuotas = await cuotasService.EliminarDetalleDeCuotas(CuotasDetalle.CuotasDetalleId);
+
         var eliminado = await prestamosService.Eliminar(Prestamo.PrestamoId);
 
-        if (eliminado)
+        if (eliminado && eliminarDetalleCuotas)
         {
             // toastService.ShowSuccess("Se ha eliminado correctamente");
             navigationManager.NavigateTo("/Prestamo/Index");
@@ -132,4 +152,24 @@
             // toastService.ShowError("No se ha podido eliminar correctamente");
         }
     }
+
+    public async Task CrearCuotas()
+    {
+        ListaCuotas.Clear();
+        double valor = Prestamo.Monto / CuotasDetalle.CuotasNo;
+        DateTime Fecha = DateTime.Now;
+        for (int i = 0; i < CuotasDetalle.CuotasNo; i++)
+        {
+            Cuotas cuota = new()
+                {
+                    CuotaNo = i + 1,
+                    CuotasDetalleId = CuotasDetalle.CuotasDetalleId,
+                    Valor = valor,
+                    Fecha = Fecha.AddMonths(i)
+                };
+
+            ListaCuotas.Add(cuota);
+        }
+    }
+
 }
