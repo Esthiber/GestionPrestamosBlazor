@@ -47,5 +47,12 @@ namespace GestionPrestamos.Services
                 .ToListAsync();
         }
 
+        public async Task<CuotasDetalle?> GetCuotasDetallesAsync(int prestamoId)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            return await context.CuotasDetalle
+                .SingleOrDefaultAsync(c => c.PrestamoId == prestamoId);
+        }
+
     }
 }
